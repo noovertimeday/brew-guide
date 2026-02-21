@@ -1,0 +1,23 @@
+{
+  "name": "BrewGuide — 珈琲抽出案内",
+  "short_name": "BrewGuide",
+  "description": "ペーパードリップ珈琲の抽出ガイド",
+  "start_url": "/brew-guide/",
+  "scope": "/brew-guide/",
+  "display": "standalone",
+  "background_color": "#f5eed8",
+  "theme_color": "#f5eed8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
