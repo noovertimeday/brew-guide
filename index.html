@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrewGuide — 珈琲抽出案内</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif+JP:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5eed8;
+  --surface: #fffdf5;
+  --surface2: #fdf6e3;
+  --gold: #9a6f1e;
+  --gold-dim: rgba(154,111,30,0.35);
+  --gold-glow: rgba(154,111,30,0.10);
+  --cream: #3a2606;
+  --muted: #6b5030;
+  --text: #3a2206;
+  --border: rgba(154,111,30,0.22);
+  --green: #3a7a3a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,248,220,0.95) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 100% 100%, rgba(210,175,80,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 40% at 0% 80%, rgba(230,200,120,0.2) 0%, transparent 50%),
+    linear-gradient(160deg, #fdf8ec 0%, #f0e2b0 40%, #e8d48a 100%);
+  color: var(--text);
+  font-family: 'Noto Serif JP', serif;
+  min-height: 100vh;
+  font-weight: 300;
+}
+.wrap { max-width: 720px; margin: 0 auto; padding: 0 20px 100px; }
+
+header { padding: 64px 0 52px; text-align: center; }
+.tagline { font-size:.65rem; letter-spacing:.45em; color:var(--gold); text-transform:uppercase; margin-bottom:20px; display:block; }
+.site-title { font-family:'Cormorant Garamond',serif; font-size:clamp(2.8rem,8vw,5rem); font-weight:600; color:#2a1800; line-height:1; letter-spacing:.04em; }
+.site-title em { font-style:italic; color:var(--gold); }
+.subtitle { margin-top:14px; font-size:.75rem; letter-spacing:.25em; color:var(--muted); }
+.header-rule { width:60px; height:1px; background:var(--gold-dim); margin:28px auto 0; }
+
+.panel { background:rgba(255,253,245,0.85); border:1px solid var(--border); border-radius:3px; padding:32px 36px; margin-bottom:20px; position:relative; box-shadow:0 2px 24px rgba(154,111,30,0.08); backdrop-filter:blur(2px); }
+.panel::before { content:''; position:absolute; inset:0; border-radius:3px; background:linear-gradient(135deg,rgba(255,248,220,0.5) 0%,transparent 60%); pointer-events:none; }
+.panel-title { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:400; color:var(--gold); letter-spacing:.2em; text-transform:uppercase; margin-bottom:28px; padding-bottom:14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.panel-title::before,.panel-title::after { content:'—'; color:var(--gold-dim); font-size:.8em; }
+
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.fg { display:flex; flex-direction:column; gap:7px; }
+.fg.span2 { grid-column:1/-1; }
+.fg label { font-size:.65rem; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; }
+.fg input,.fg select { background:rgba(255,252,240,0.9); border:1px solid rgba(154,111,30,.25); border-radius:2px; color:#2a1800; font-family:'Noto Serif JP',serif; font-size:.95rem; font-weight:300; padding:11px 14px; width:100%; transition:border-color .25s; appearance:none; }
+.fg input:focus,.fg select:focus { outline:none; border-color:var(--gold); }
+.sel-wrap { position:relative; }
+.sel-wrap::after { content:'▾'; position:absolute; right:13px; top:50%; transform:translateY(-50%); color:var(--gold); font-size:.75rem; pointer-events:none; }
+select option { background:#fffdf0; color:#2a1800; }
+.bean-display { background:rgba(201,168,76,.06); border:1px solid var(--gold-dim); border-radius:2px; padding:10px 14px; font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--gold); text-align:center; letter-spacing:.05em; }
+.bean-display small { font-size:.65rem; font-family:'Noto Serif JP',serif; color:var(--muted); margin-left:4px; }
+
+/* Cup counter */
+.cup-section { display:flex; flex-direction:column; align-items:center; gap:18px; padding:8px 0 4px; }
+.cup-label { font-size:.65rem; letter-spacing:.25em; color:var(--muted); text-transform:uppercase; }
+.cup-counter { display:flex; align-items:center; gap:0; }
+.cup-btn {
+  width:52px; height:52px;
+  background:none;
+  border:1px solid var(--gold-dim);
+  color:var(--gold);
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem; line-height:1;
+  cursor:pointer;
+  transition:all .2s;
+  display:flex; align-items:center; justify-content:center;
+}
+.cup-btn:first-child { border-radius:2px 0 0 2px; }
+.cup-btn:last-child  { border-radius:0 2px 2px 0; }
+.cup-btn:hover { background:rgba(154,111,30,.1); border-color:var(--gold); }
+.cup-btn:active { background:rgba(154,111,30,.2); }
+.cup-num {
+  width:80px; height:52px;
+  background:rgba(255,252,240,0.9);
+  border:none;
+  border-top:1px solid var(--gold-dim);
+  border-bottom:1px solid var(--gold-dim);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.2rem; color:#2a1800;
+  letter-spacing:.05em;
+  text-align:center;
+  appearance:none; -moz-appearance:textfield;
+  padding:0;
+  outline:none;
+}
+.cup-num::-webkit-inner-spin-button,
+.cup-num::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.cup-num:focus { border-top-color:var(--gold); border-bottom-color:var(--gold); }
+.cup-icons { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; min-height:28px; }
+.cup-icon { font-size:1.3rem; transition:all .3s; }
+
+/* Live water display */
+.water-hero {
+  text-align:center;
+  padding:22px 16px 18px;
+  background:rgba(154,111,30,.06);
+  border:1px solid var(--gold-dim);
+  border-radius:2px;
+  margin-top:4px;
+}
+.water-big {
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3rem,12vw,5rem);
+  color:var(--gold);
+  line-height:1;
+  letter-spacing:.04em;
+}
+.water-big sup { font-size:.4em; vertical-align:super; }
+.water-sub { font-size:.7rem; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; margin-top:6px; }
+.water-breakdown { font-size:.75rem; color:rgba(154,111,30,.7); margin-top:8px; letter-spacing:.05em; }
+
+/* Settings accordion */
+.settings-toggle {
+  display:flex; align-items:center; justify-content:space-between;
+  background:none; border:none; border-top:1px solid var(--border);
+  width:100%; padding:14px 0 0; margin-top:20px;
+  cursor:pointer; color:var(--muted);
+  font-family:'Noto Serif JP',serif; font-size:.75rem; letter-spacing:.15em;
+  text-transform:uppercase; transition:color .2s;
+}
+.settings-toggle:hover { color:var(--gold); }
+.settings-toggle .arr { font-size:.6rem; transition:transform .3s; display:inline-block; }
+.settings-toggle.open .arr { transform:rotate(180deg); }
+.settings-body { display:none; padding-top:18px; }
+.settings-body.open { display:block; animation:fi .3s ease; }
+
+.brew-btn { width:100%; background:linear-gradient(160deg,#c9a84c,#9a6f1e); border:none; border-radius:2px; color:#fff8e8; font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; letter-spacing:.15em; padding:17px; cursor:pointer; margin-top:6px; transition:all .3s; text-transform:uppercase; }
+.brew-btn:hover { box-shadow:0 6px 28px rgba(154,111,30,.35); transform:translateY(-2px); }
+.brew-btn:active { transform:translateY(0); }
+.back-btn { width:100%; background:none; border:1px solid var(--gold-dim); color:var(--gold); font-family:'Cormorant Garamond',serif; font-size:1rem; letter-spacing:.1em; padding:14px; cursor:pointer; border-radius:2px; margin-top:24px; transition:all .25s; }
+.back-btn:hover { background:rgba(154,111,30,.07); }
+
+.summary-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+.sum-box { flex:1; min-width:90px; text-align:center; padding:14px 10px; background:rgba(154,111,30,.07); border:1px solid var(--gold-dim); border-radius:2px; }
+.sum-val { font-family:'Cormorant Garamond',serif; font-size:2rem; color:var(--gold); display:block; line-height:1; }
+.sum-val sup { font-size:.75rem; }
+.sum-lbl { font-size:.6rem; letter-spacing:.15em; color:var(--muted); text-transform:uppercase; margin-top:5px; display:block; }
+
+.tips-box { background:rgba(154,111,30,.05); border-left:2px solid var(--gold); border-radius:0 2px 2px 0; padding:14px 18px; font-size:.85rem; line-height:1.85; color:var(--text); margin-bottom:28px; white-space:pre-line; }
+
+.steps-label { font-family:'Cormorant Garamond',serif; font-size:.9rem; letter-spacing:.2em; color:var(--gold); text-transform:uppercase; margin-bottom:14px; }
+.step-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.step-item { display:flex; gap:14px; align-items:flex-start; padding:13px 15px; background:rgba(255,252,240,0.7); border:1px solid rgba(154,111,30,.12); border-left:2px solid rgba(154,111,30,.25); border-radius:0 2px 2px 0; cursor:pointer; transition:all .25s; }
+.step-item:hover { background:rgba(154,111,30,.06); border-left-color:var(--gold); }
+.step-item.active { background:rgba(154,111,30,.10); border-left-color:var(--gold); }
+.step-item.done { border-left-color:var(--green); opacity:.6; }
+.step-num { font-family:'Cormorant Garamond',serif; font-size:1.25rem; color:var(--gold); min-width:22px; line-height:1.1; }
+.step-item.done .step-num { color:var(--green); }
+.step-content { flex:1; min-width:0; }
+.step-name { font-size:.88rem; font-weight:400; color:#2a1800; margin-bottom:3px; }
+.step-desc { font-size:.75rem; color:var(--muted); line-height:1.55; }
+.step-dur { font-family:'Cormorant Garamond',serif; font-size:.9rem; color:var(--muted); white-space:nowrap; padding-top:2px; }
+
+.timer-wrap { text-align:center; padding:36px 20px 28px; background:rgba(255,252,240,0.9); border:1px solid var(--gold-dim); border-radius:3px; margin-top:24px; box-shadow:0 2px 16px rgba(154,111,30,.08); }
+.timer-stepname { font-size:.8rem; letter-spacing:.18em; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+.timer-clock { font-family:'Cormorant Garamond',serif; font-size:clamp(4rem,14vw,7rem); color:var(--gold); line-height:1; letter-spacing:.06em; margin-bottom:6px; }
+.timer-water { font-size:.85rem; color:var(--text); margin-bottom:16px; letter-spacing:.05em; }
+
+/* Cumulative water tracker */
+.water-tracker {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-bottom:14px; font-size:.8rem; letter-spacing:.08em; color:var(--muted);
+}
+.water-tracker .poured { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--gold); line-height:1; }
+.water-tracker .total-w { font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--muted); line-height:1; }
+.water-bar-track { width:100%; height:8px; background:rgba(100,90,80,.12); border-radius:4px; overflow:hidden; margin-bottom:24px; }
+.water-bar-fill { height:100%; width:0; background:linear-gradient(to right,#8a7a6a,#b0a090); border-radius:4px; transition:width .9s linear; }
+
+/* Finish banner */
+.finish-banner { display:none; text-align:center; padding:20px 16px; background:rgba(58,122,58,.07); border:1px solid rgba(58,122,58,.4); border-radius:2px; margin-top:16px; animation:fi .5s ease; }
+.finish-banner .finish-title { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-style:italic; color:#2d7a2d; letter-spacing:.08em; margin-bottom:6px; }
+.finish-banner .finish-sub { font-size:.75rem; letter-spacing:.15em; color:rgba(45,122,45,.8); text-transform:uppercase; }
+
+.timer-btns { display:flex; gap:10px; justify-content:center; }
+.tbtn { background:none; border:1px solid var(--gold-dim); color:var(--gold); font-family:'Cormorant Garamond',serif; font-size:1rem; letter-spacing:.1em; padding:10px 26px; border-radius:2px; cursor:pointer; transition:all .25s; }
+.tbtn:hover { background:rgba(154,111,30,.08); border-color:var(--gold); }
+.tbtn.primary { background:linear-gradient(160deg,#c9a84c,#9a6f1e); color:#fff8e8; font-weight:600; border:none; }
+.tbtn.primary:hover { box-shadow:0 4px 20px rgba(154,111,30,.3); }
+
+.hidden { display:none !important; }
+.fade-in { animation:fi .5s ease; }
+@keyframes fi { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+footer { text-align:center; margin-top:72px; font-size:.6rem; letter-spacing:.25em; color:rgba(154,111,30,.45); text-transform:uppercase; }
+
+@media(max-width:480px){
+  .panel{padding:24px 18px;}
+  .form-grid{grid-template-columns:1fr;}
+  .fg.span2{grid-column:1;}
+  .sum-val{font-size:1.5rem;}
+  .timer-clock{font-size:3.8rem;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="tagline">ペーパードリップ</span>
+  <h1 class="site-title">Brew<em>Guide</em></h1>
+  <p class="subtitle">珈琲抽出案内</p>
+  <div class="header-rule"></div>
+</header>
+
+<!-- 入力パネル -->
+<div class="panel" id="inputPanel">
+  <div class="panel-title">何杯分淹れますか？</div>
+
+  <!-- Cup counter -->
+  <div class="cup-section">
+    <div class="cup-label">カップ数</div>
+    <div class="cup-counter">
+      <button class="cup-btn" onclick="changeCups(-1)">−</button>
+      <input class="cup-num" id="cupNum" type="number" value="1" min="0.1" max="8" step="0.1"
+        oninput="onCupInput()" onblur="onCupBlur()">
+      <button class="cup-btn" onclick="changeCups(1)">+</button>
+    </div>
+    <div class="cup-icons" id="cupIcons">☕</div>
+  </div>
+
+  <!-- Live water total -->
+  <div class="water-hero" id="waterHero">
+    <div class="water-big" id="waterBig">210<sup>ml</sup></div>
+    <div class="water-sub">必要な湯量</div>
+    <div class="water-breakdown" id="waterBreakdown">豆 14g &nbsp;·&nbsp; 蒸らし 28ml</div>
+  </div>
+
+  <button class="brew-btn" onclick="brew()" style="margin-top:20px">抽出を開始する</button>
+
+  <!-- Settings accordion -->
+  <button class="settings-toggle" id="settingsToggle" onclick="toggleSettings()">
+    <span>⚙ 詳細設定（煎り具合・挽き目・豆量）</span>
+    <span class="arr">▾</span>
+  </button>
+  <div class="settings-body" id="settingsBody">
+    <div class="form-grid">
+      <div class="fg">
+        <label>一杯あたりの豆の量 (g)</label>
+        <input type="number" id="beans" value="14" min="5" max="40" step="0.5" oninput="updateWater()">
+      </div>
+      <div class="fg" style="justify-content:flex-end">
+        <label>&nbsp;</label>
+        <button class="tbtn" onclick="resetBeans()" style="font-size:.8rem;padding:10px 14px;letter-spacing:.05em;">デフォルトに戻す (14g)</button>
+      </div>
+      <div class="fg">
+        <label>煎り具合</label>
+        <div class="sel-wrap">
+          <select id="roast" onchange="updateWater()">
+            <option value="light">浅煎り（ライト〜シナモン）</option>
+            <option value="medium" selected>中煎り（ミディアム〜ハイ）</option>
+            <option value="medium-dark">中深煎り（シティ〜フルシティ）</option>
+            <option value="dark">深煎り（フレンチ〜イタリアン）</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>挽き目</label>
+        <div class="sel-wrap">
+          <select id="grind" onchange="updateWater()">
+            <option value="fine">細挽き</option>
+            <option value="medium-fine">やや細挽き</option>
+            <option value="medium" selected>中挽き（標準）</option>
+            <option value="medium-coarse">やや粗挽き</option>
+            <option value="coarse">粗挽き</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- レシピパネル -->
+<div class="panel hidden" id="recipePanel">
+  <div class="panel-title">レシピ</div>
+  <div class="summary-row" id="summaryRow"></div>
+  <div class="tips-box" id="tipsBox"></div>
+  <div class="steps-label">— 抽出ステップ —</div>
+  <ul class="step-list" id="stepList"></ul>
+  <div class="timer-wrap" id="timerWrap">
+    <div class="timer-stepname" id="tStepName"></div>
+    <div class="timer-clock" id="tClock">0:00</div>
+    <div class="timer-water" id="tWater"></div>
+    <!-- Cumulative water with live progress -->
+    <div class="water-tracker">
+      <span class="poured" id="wPoured">0</span>
+      <span style="color:var(--gold-dim)">ml</span>
+      <span>/</span>
+      <span class="total-w" id="wTotal">0</span>
+      <span style="font-size:.7rem">ml 注湯済み</span>
+    </div>
+    <div class="water-bar-track"><div class="water-bar-fill" id="wBar"></div></div>
+    <div class="timer-btns">
+      <button class="tbtn primary" id="tStart" onclick="timerToggle()">開始</button>
+      <button class="tbtn" onclick="timerReset()">リセット</button>
+      <button class="tbtn" onclick="timerSkip()" style="font-size:.85rem;opacity:.6;letter-spacing:.05em;">スキップ</button>
+    </div>
+  </div>
+  <div class="finish-banner" id="finishBanner">
+    <div class="finish-title">Finish — 完成</div>
+    <div class="finish-sub" id="finishSub"></div>
+  </div>
+  <button class="back-btn" onclick="goBack()">← 条件を変える</button>
+</div>
+
+<footer>BrewGuide — Hand-crafted Pour Over Recipes &nbsp;|&nbsp; © 2026</footer>
+</div>
+
+<script>
+// ── Recipe database ──
+// Ratios based on SCA guidelines + James Hoffman / Scott Rao methodology
+const RECIPES = {
+  light: {
+    fine:           { ratio:14.5, temp:96 },
+    'medium-fine':  { ratio:15.0, temp:95 },
+    medium:         { ratio:15.5, temp:94 },
+    'medium-coarse':{ ratio:16.0, temp:93 },
+    coarse:         { ratio:16.5, temp:92 },
+  },
+  medium: {
+    fine:           { ratio:13.5, temp:92 },
+    'medium-fine':  { ratio:14.0, temp:91 },
+    medium:         { ratio:15.0, temp:90 },
+    'medium-coarse':{ ratio:15.5, temp:89 },
+    coarse:         { ratio:16.0, temp:88 },
+  },
+  'medium-dark': {
+    fine:           { ratio:12.5, temp:89 },
+    'medium-fine':  { ratio:13.0, temp:88 },
+    medium:         { ratio:14.0, temp:87 },
+    'medium-coarse':{ ratio:14.5, temp:86 },
+    coarse:         { ratio:15.0, temp:85 },
+  },
+  dark: {
+    fine:           { ratio:11.5, temp:86 },
+    'medium-fine':  { ratio:12.0, temp:85 },
+    medium:         { ratio:12.5, temp:84 },
+    'medium-coarse':{ ratio:13.0, temp:83 },
+    coarse:         { ratio:13.5, temp:82 },
+  }
+};
+
+const TIPS = {
+  light: `浅煎りは豆に含まれるガスが多く、蒸らしが特に重要です。高めの湯温（93〜96°C）で酸味とフルーティーな香りを引き出します。スパイラルを描くようにゆっくり注ぎ、湯がフィルターの縁に触れないよう注意しましょう。抽出が速すぎると薄く、遅すぎると酸が突出します。`,
+  medium: `中煎りはバランスのとれた抽出が可能な煎り度です。SCA（スペシャルティコーヒー協会）の黄金比「1:15〜16」を基本に、90°C前後の湯温で安定した流量を保ちましょう。蒸らし後に湯を一定ペースで注ぎ込み、均一なコーヒーベッドを作ることが重要です。`,
+  'medium-dark': `中深煎りはオイル感と甘みが増す段階です。湯温をやや低めに設定し、抽出過多による雑味や過剰な苦味を避けます。蒸らし後は湯面をできるだけ一定に保ちながら注ぐことで、均一な抽出が実現します。`,
+  dark: `深煎りは低めの湯温（82〜86°C）でゆっくり抽出します。高温だと苦味が強くなりすぎるためです。少量ずつ丁寧に注ぐことで、チョコレートやキャラメルの甘みを引き出しましょう。`
+};
+
+function buildSteps(totalBeans, totalWater, roast, grind) {
+  const bloom = Math.round(totalBeans * 2);
+  const remain = totalWater - bloom;
+
+  const bloomSec = roast==='light' ? 45 : roast==='dark' ? 35 : 40;
+  const basePour = roast==='light' ? 40 : roast==='dark' ? 55 : 45;
+  const grindAdj = {fine:10,'medium-fine':5,medium:0,'medium-coarse':-5,coarse:-10};
+  const adj = grindAdj[grind]||0;
+
+  const p1 = Math.round(remain*0.40);
+  const p2 = Math.round(remain*0.35);
+  const p3 = remain - p1 - p2;
+
+  return [
+    { name:'蒸らし（ブルーミング）', dur:bloomSec, water:bloom,
+      desc:`中心から螺旋を描くよう${bloom}mlを静かに注ぐ。ガスを放出させ抽出を均一に。縁まで湯を届けないこと。` },
+    { name:'1投目', dur:basePour+adj, water:p1,
+      desc:`湯面が下がり始めたら${p1}mlを注ぐ。一定のペースを保ち、コーヒーベッドを均一に保つ。` },
+    { name:'2投目', dur:basePour+adj-5, water:p2,
+      desc:`湯が3〜4割まで下がったら${p2}mlを注ぐ。中心から外へ同心円状に。泡立てないよう注意。` },
+    { name:'3投目（最終）', dur:Math.max(25,basePour+adj-10), water:p3,
+      desc:`最後の${p3}mlを静かに注ぐ。縁近くまで均一に行き渡らせる。` },
+    { name:'ドリップ待ち', dur:45, water:0,
+      desc:`すべての湯が落ちきるまで待つ（約40〜50秒）。途中でドリッパーを外さないこと。` }
+  ];
+}
+
+// ── State ──
+let steps=[], curStep=0, timerSec=0, totalSec=0, ticking=false, ticker=null;
+let cups=1;
+let totalWaterGoal=0, pouredWater=0;
+
+function fmt(s){ return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+
+function changeCups(d){
+  const input = document.getElementById('cupNum');
+  cups = Math.min(8, Math.max(0.1, Math.round((parseFloat(input.value)||1) + d)));
+  input.value = cups;
+  renderCupIcons();
+  updateWater();
+}
+
+function onCupInput(){
+  const input = document.getElementById('cupNum');
+  const v = parseFloat(input.value);
+  if(!isNaN(v) && v > 0) {
+    cups = Math.round(Math.min(8, Math.max(0.1, v)) * 10) / 10;
+    renderCupIcons();
+    updateWater();
+  }
+}
+
+function onCupBlur(){
+  const input = document.getElementById('cupNum');
+  const v = parseFloat(input.value);
+  if(isNaN(v) || v <= 0) { cups = 1; input.value = 1; }
+  else { cups = Math.round(Math.min(8, Math.max(0.1, v)) * 10) / 10; input.value = cups; }
+  renderCupIcons();
+  updateWater();
+}
+
+function renderCupIcons(){
+  const full = Math.floor(cups);
+  const half = cups % 1 >= 0.5 ? 1 : (cups % 1 > 0 && cups % 1 < 0.5 ? 1 : 0);
+  const icons = Array(full).fill('☕').join('') + (half && cups !== full ? '·' : '');
+  document.getElementById('cupIcons').innerHTML = icons || '☕';
+}
+
+function updateWater(){
+  const b = parseFloat(document.getElementById('beans').value)||14;
+  const roast = document.getElementById('roast').value;
+  const grind  = document.getElementById('grind').value;
+  const totalBeans = b * cups;
+  const rec = RECIPES[roast][grind];
+  const totalWater = Math.round(totalBeans * rec.ratio);
+  const bloom = Math.round(totalBeans * 2);
+  document.getElementById('waterBig').innerHTML = `${totalWater}<sup>ml</sup>`;
+  document.getElementById('waterBreakdown').textContent = `豆 ${totalBeans.toFixed(1).replace(/\.0$/,'')}g　·　蒸らし ${bloom}ml　·　湯温 ${rec.temp}°C`;
+}
+
+function resetBeans(){
+  document.getElementById('beans').value = 14;
+  updateWater();
+}
+
+function toggleSettings(){
+  const btn  = document.getElementById('settingsToggle');
+  const body = document.getElementById('settingsBody');
+  btn.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function brew(){
+  const b=parseFloat(document.getElementById('beans').value)||14;
+  const roast=document.getElementById('roast').value;
+  const grind=document.getElementById('grind').value;
+  const totalBeans=b*cups;
+  const rec=RECIPES[roast][grind];
+  const totalWater=Math.round(totalBeans*rec.ratio);
+
+  document.getElementById('summaryRow').innerHTML=`
+    <div class="sum-box"><span class="sum-val">${totalWater}<sup>ml</sup></span><span class="sum-lbl">総湯量</span></div>
+    <div class="sum-box"><span class="sum-val">${rec.ratio}</span><span class="sum-lbl">1gあたり(ml)</span></div>
+    <div class="sum-box"><span class="sum-val">${rec.temp}<sup>°C</sup></span><span class="sum-lbl">推奨湯温</span></div>
+    <div class="sum-box"><span class="sum-val">${Math.round(totalBeans*2)}<sup>ml</sup></span><span class="sum-lbl">蒸らし湯量</span></div>
+  `;
+  document.getElementById('tipsBox').textContent=TIPS[roast];
+
+  steps=buildSteps(totalBeans,totalWater,roast,grind);
+  curStep=0;
+  totalWaterGoal=totalWater;
+  pouredWater=0;
+  document.getElementById('finishBanner').style.display='none';
+  document.getElementById('wTotal').textContent=totalWater;
+  updateWaterTracker();
+
+  const ul=document.getElementById('stepList');
+  ul.innerHTML=steps.map((s,i)=>`
+    <li class="step-item ${i===0?'active':''}" id="si-${i}" onclick="selectStep(${i})">
+      <span class="step-num">${i+1}</span>
+      <div class="step-content">
+        <div class="step-name">${s.name}${s.water>0?' — '+s.water+'ml':''}</div>
+        <div class="step-desc">${s.desc}</div>
+      </div>
+      <span class="step-dur">${fmt(s.dur)}</span>
+    </li>`).join('');
+
+  loadStep(0);
+  document.getElementById('inputPanel').classList.add('hidden');
+  const rp=document.getElementById('recipePanel');
+  rp.classList.remove('hidden');
+  rp.classList.add('fade-in');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selectStep(i){
+  stopTicker();
+  curStep=i;
+  document.querySelectorAll('.step-item').forEach((el,j)=>{
+    el.classList.toggle('active',j===i);
+    el.classList.remove('done');
+  });
+  for(let j=0;j<i;j++) document.getElementById('si-'+j)?.classList.add('done');
+  loadStep(i);
+}
+
+function updateWaterTracker(liveAdd){
+  // liveAdd: 現ステップで今この瞬間まで注いだ推定量（省略時は0）
+  const displayed = pouredWater + (liveAdd || 0);
+  document.getElementById('wPoured').textContent = Math.round(displayed);
+  const pct = totalWaterGoal > 0 ? Math.min(100, displayed / totalWaterGoal * 100) : 0;
+  document.getElementById('wBar').style.width = pct + '%';
+}
+
+function loadStep(i){
+  const s=steps[i];
+  totalSec=s.dur; timerSec=s.dur;
+  document.getElementById('tStepName').textContent=`ステップ ${i+1} / ${steps.length} — ${s.name}`;
+  document.getElementById('tWater').textContent=s.water>0?`💧 このステップで ${s.water}ml 注ぐ`:'湯が落ちきるまで待つ';
+  document.getElementById('tStart').textContent='開始';
+  ticking=false;
+  document.getElementById('tClock').textContent=fmt(timerSec);
+  updateWaterTracker(); // バーを確定済み状態にリセット
+}
+
+function timerToggle(){
+  if(ticking){
+    stopTicker();
+    document.getElementById('tStart').textContent='再開';
+  } else {
+    ticking=true;
+    document.getElementById('tStart').textContent='一時停止';
+    let startedAt = Date.now();
+    const startSec = timerSec; // 一時停止した時点の残り秒数から再開
+    ticker=setInterval(()=>{
+      const elapsed = (Date.now() - startedAt) / 1000; // 実経過秒（小数）
+      timerSec = Math.max(0, startSec - elapsed);
+
+      const stepWater = steps[curStep].water;
+      const elapsedClamped = Math.min(elapsed, startSec);
+      const liveAdd = stepWater > 0 ? (elapsedClamped / startSec) * stepWater : 0;
+      updateWaterTracker(liveAdd);
+      document.getElementById('tClock').textContent=fmt(Math.ceil(timerSec));
+
+      if(timerSec<=0){
+        stopTicker();
+        pouredWater += stepWater;
+        updateWaterTracker();
+        document.getElementById('tStart').textContent='完了 ✓';
+        document.getElementById('si-'+curStep)?.classList.add('done');
+        document.getElementById('si-'+curStep)?.classList.remove('active');
+        if(curStep<steps.length-1){
+          setTimeout(timerNext, 800);
+        } else {
+          const banner = document.getElementById('finishBanner');
+          banner.style.display='block';
+          document.getElementById('finishSub').textContent=
+            `総湯量 ${pouredWater}ml / ${totalWaterGoal}ml — 美味しい珈琲をどうぞ`;
+          banner.scrollIntoView({behavior:'smooth',block:'center'});
+        }
+      }
+    },200); // 0.2秒ごとに更新して滑らかに
+  }
+}
+
+function stopTicker(){ clearInterval(ticker); ticking=false; }
+
+function timerReset(){
+  stopTicker();
+  timerSec=totalSec;
+  document.getElementById('tStart').textContent='開始';
+  document.getElementById('tClock').textContent=fmt(timerSec);
+  updateWaterTracker(); // 確定済み水量に戻す
+}
+
+function timerSkip(){
+  if(curStep<steps.length-1){
+    stopTicker();
+    pouredWater += steps[curStep].water;
+    updateWaterTracker();
+    curStep++;
+    document.querySelectorAll('.step-item').forEach((el,j)=>el.classList.toggle('active',j===curStep));
+    for(let j=0;j<curStep;j++) document.getElementById('si-'+j)?.classList.add('done');
+    loadStep(curStep);
+    document.getElementById('timerWrap').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+
+function timerNext(){
+  // 自動進行: 水の加算は呼び出し元で済んでいるのでここでは行わない
+  if(curStep<steps.length-1){
+    stopTicker();
+    curStep++;
+    document.querySelectorAll('.step-item').forEach((el,j)=>el.classList.toggle('active',j===curStep));
+    for(let j=0;j<curStep;j++) document.getElementById('si-'+j)?.classList.add('done');
+    loadStep(curStep);
+    document.getElementById('timerWrap').scrollIntoView({behavior:'smooth',block:'center'});
+    // 次ステップを自動スタート
+    setTimeout(()=>{ if(!ticking) timerToggle(); }, 100);
+  }
+}
+
+function goBack(){
+  stopTicker();
+  pouredWater=0; totalWaterGoal=0;
+  document.getElementById('finishBanner').style.display='none';
+  document.getElementById('recipePanel').classList.add('hidden');
+  document.getElementById('inputPanel').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+renderCupIcons();
+updateWater();
+</script>
+</body>
+</html>
